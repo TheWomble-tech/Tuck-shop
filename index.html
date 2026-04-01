@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tuck Shop Till</title>
+  <style>
+    :root{
+      --bg:#f3f4f6;
+      --card:#ffffff;
+      --border:#d1d5db;
+      --text:#111827;
+      --muted:#6b7280;
+      --blue:#2563eb;
+      --blue-dark:#1d4ed8;
+      --red:#dc2626;
+      --soft:#eef2f7;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+    .wrap{
+      max-width:720px;
+      margin:0 auto;
+      padding:12px 12px 92px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px;
+      margin-bottom:12px;
+      box-shadow:0 4px 14px rgba(0,0,0,.06);
+    }
+    .sticky{
+      position:sticky;
+      top:8px;
+      z-index:10;
+    }
+    h1,h2{margin:0 0 10px}
+    .sub,.muted{color:var(--muted)}
+    .totalbox{
+      border:1px solid #c7d2fe;
+      background:#eaf1ff;
+      border-radius:14px;
+      padding:12px;
+      margin-top:10px;
+    }
+    .total{
+      font-size:34px;
+      font-weight:800;
+      margin:4px 0;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+    .item-btn{
+      border:none;
+      border-radius:16px;
+      background:linear-gradient(180deg,var(--blue),#3b82f6);
+      color:white;
+      padding:18px 12px;
+      min-height:92px;
+      text-align:left;
+      font-weight:800;
+      font-size:18px;
+      cursor:pointer;
+      touch-action:manipulation;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    .item-btn:active{transform:scale(.98);background:var(--blue-dark)}
+    .price{
+      display:block;
+      margin-top:8px;
+      font-size:22px;
+    }
+    .actions{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+      margin-top:10px;
+    }
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:12px;
+      font-weight:800;
+      font-size:15px;
+      cursor:pointer;
+      touch-action:manipulation;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    .btn.soft{background:var(--soft)}
+    .btn.red{background:var(--red);color:white}
+    .btn.blue{background:var(--blue);color:white}
+    .row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:center;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:10px;
+      margin-bottom:8px;
+    }
+    .line-total{font-weight:800;text-align:right}
+    .qty{
+      display:flex;
+      gap:6px;
+      justify-content:flex-end;
+      align-items:center;
+      margin-top:6px;
+    }
+    .qty-btn{
+      width:34px;
+      height:34px;
+      border:none;
+      border-radius:10px;
+      background:var(--soft);
+      font-size:20px;
+      font-weight:800;
+      cursor:pointer;
+      touch-action:manipulation;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    .editor{
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:10px;
+      margin-bottom:8px;
+    }
+    .editgrid{
+      display:grid;
+      grid-template-columns:1fr 110px;
+      gap:8px;
+      margin-bottom:8px;
+    }
+    input{
+      width:100%;
+      padding:12px;
+      border:1px solid #cfd5dc;
+      border-radius:12px;
+      font-size:16px;
+      background:#fff;
+    }
+    .editoractions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+    }
+    .empty{
+      color:var(--muted);
+      padding:10px;
+      border:1px dashed var(--border);
+      border-radius:12px;
+      background:#fafafa;
+      text-align:center;
+    }
+    .tiny{font-size:13px;color:var(--muted)}
+    @media (min-width:700px){
+      .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card sticky">
+      <h1>Tuck Shop Till</h1>
+      <div class="sub">Tap an item to add it to the total.</div>
+      <div class="totalbox">
+        <div class="muted">Total due</div>
+        <div id="total" class="total">£0.00</div>
+        <div id="count" class="tiny">0 items</div>
+      </div>
+      <div class="actions">
+        <button class="btn soft" id="newSaleBtn" type="button">New Sale</button>
+        <button class="btn soft" id="undoBtn" type="button">Undo</button>
+        <button class="btn red" id="clearBtn" type="button">Clear</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Items</h2>
+      <div id="items" class="grid"></div>
+    </div>
+
+    <div class="card">
+      <h2>Basket</h2>
+      <div id="basket"></div>
+    </div>
+
+    <div class="card">
+      <h2>Customise buttons</h2>
+      <div id="editor"></div>
+      <div class="actions" style="grid-template-columns:1fr 1fr">
+        <button class="btn blue" id="addBtn" type="button">Add Button</button>
+        <button class="btn soft" id="resetBtn" type="button">Reset Defaults</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  const defaultItems = [
+    { id: "1", name: "Crisps", price: 0.50 },
+    { id: "2", name: "Chocolate", price: 0.80 },
+    { id: "3", name: "Water", price: 1.00 },
+    { id: "4", name: "Can of Pop", price: 1.20 },
+    { id: "5", name: "Biscuits", price: 0.70 },
+    { id: "6", name: "Noodles", price: 1.50 }
+  ];
+
+  const $items = document.getElementById("items");
+  const $basket = document.getElementById("basket");
+  const $editor = document.getElementById("editor");
+  const $total = document.getElementById("total");
+  const $count = document.getElementById("count");
+
+  let items = read("tuck_items_v3", clone(defaultItems));
+  let basket = read("tuck_basket_v3", []);
+  let history = read("tuck_history_v3", []);
+
+  function clone(v) {
+    return JSON.parse(JSON.stringify(v));
+  }
+
+  function read(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function save() {
+    localStorage.setItem("tuck_items_v3", JSON.stringify(items));
+    localStorage.setItem("tuck_basket_v3", JSON.stringify(basket));
+    localStorage.setItem("tuck_history_v3", JSON.stringify(history));
+  }
+
+  function money(n) {
+    return "£" + Number(n || 0).toFixed(2);
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function updateTotals() {
+    let total = 0;
+    let count = 0;
+    basket.forEach(function (b) {
+      total += Number(b.price) * Number(b.qty);
+      count += Number(b.qty);
+    });
+    $total.textContent = money(total);
+    $count.textContent = count + (count === 1 ? " item" : " items");
+    save();
+  }
+
+  function renderItems() {
+    let html = "";
+    items.forEach(function (it) {
+      html += `
+        <button class="item-btn" type="button" data-id="${esc(it.id)}">
+          ${esc(it.name)}
+          <span class="price">${money(it.price)}</span>
+        </button>
+      `;
+    });
+    $items.innerHTML = html;
+  }
+
+  function renderBasket() {
+    if (!basket.length) {
+      $basket.innerHTML = `<div class="empty">No items yet.</div>`;
+      updateTotals();
+      return;
+    }
+
+    let html = "";
+    basket.forEach(function (b) {
+      html += `
+        <div class="row">
+          <div>
+            <div><strong>${esc(b.name)}</strong></div>
+            <div class="tiny">${money(b.price)} each</div>
+          </div>
+          <div>
+            <div class="line-total">${money(b.price * b.qty)}</div>
+            <div class="qty">
+              <button class="qty-btn" type="button" data-action="dec" data-id="${esc(b.id)}">−</button>
+              <div><strong>${b.qty}</strong></div>
+              <button class="qty-btn" type="button" data-action="inc" data-id="${esc(b.id)}">+</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    $basket.innerHTML = html;
+    updateTotals();
+  }
+
+  function renderEditor() {
+    let html = "";
+    items.forEach(function (it) {
+      html += `
+        <div class="editor">
+          <div class="editgrid">
+            <input type="text" value="${esc(it.name)}" data-role="name" data-id="${esc(it.id)}">
+            <input type="number" min="0" step="0.01" value="${Number(it.price).toFixed(2)}" data-role="price" data-id="${esc(it.id)}">
+          </div>
+          <div class="editoractions">
+            <div class="tiny">Live update</div>
+            <button class="btn red" type="button" data-action="delete" data-id="${esc(it.id)}" style="padding:10px 12px">Delete</button>
+          </div>
+        </div>
+      `;
+    });
+    $editor.innerHTML = html;
+  }
+
+  function addToBasket(id) {
+    const item = items.find(function (it) { return it.id === id; });
+    if (!item) return;
+
+    const existing = basket.find(function (b) { return b.id === id; });
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      basket.push({ id: item.id, name: item.name, price: Number(item.price), qty: 1 });
+    }
+    history.push(id);
+    renderBasket();
+  }
+
+  function changeQty(id, delta) {
+    const existing = basket.find(function (b) { return b.id === id; });
+    if (!existing) return;
+    existing.qty += delta;
+    if (existing.qty <= 0) {
+      basket = basket.filter(function (b) { return b.id !== id; });
+    }
+    renderBasket();
+  }
+
+  function updateName(id, value) {
+    const clean = (value || "").trim() || "Unnamed Item";
+    const item = items.find(function (it) { return it.id === id; });
+    if (item) item.name = clean;
+    const existing = basket.find(function (b) { return b.id === id; });
+    if (existing) existing.name = clean;
+    renderItems();
+    renderBasket();
+    save();
+  }
+
+  function updatePrice(id, value) {
+    let price = parseFloat(value);
+    if (!Number.isFinite(price)) price = 0;
+    const item = items.find(function (it) { return it.id === id; });
+    if (item) item.price = price;
+    const existing = basket.find(function (b) { return b.id === id; });
+    if (existing) existing.price = price;
+    renderItems();
+    renderBasket();
+    save();
+  }
+
+  function deleteItem(id) {
+    items = items.filter(function (it) { return it.id !== id; });
+    basket = basket.filter(function (b) { return b.id !== id; });
+    history = history.filter(function (h) { return h !== id; });
+    renderItems();
+    renderBasket();
+    renderEditor();
+    save();
+  }
+
+  function addItem() {
+    items.push({
+      id: String(Date.now()),
+      name: "New Item",
+      price: 1.00
+    });
+    renderItems();
+    renderEditor();
+    save();
+  }
+
+  function resetItems() {
+    items = clone(defaultItems);
+    basket = [];
+    history = [];
+    renderItems();
+    renderBasket();
+    renderEditor();
+    save();
+  }
+
+  function newSale() {
+    basket = [];
+    history = [];
+    renderBasket();
+  }
+
+  function clearBasket() {
+    basket = [];
+    history = [];
+    renderBasket();
+  }
+
+  function undoLast() {
+    if (!history.length) return;
+    const id = history.pop();
+    changeQty(id, -1);
+  }
+
+  document.getElementById("newSaleBtn").addEventListener("click", newSale);
+  document.getElementById("undoBtn").addEventListener("click", undoLast);
+  document.getElementById("clearBtn").addEventListener("click", clearBasket);
+  document.getElementById("addBtn").addEventListener("click", addItem);
+  document.getElementById("resetBtn").addEventListener("click", resetItems);
+
+  $items.addEventListener("click", function (e) {
+    const btn = e.target.closest(".item-btn");
+    if (!btn) return;
+    addToBasket(btn.dataset.id);
+  });
+
+  $basket.addEventListener("click", function (e) {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (btn.dataset.action === "dec") changeQty(id, -1);
+    if (btn.dataset.action === "inc") changeQty(id, 1);
+  });
+
+  $editor.addEventListener("input", function (e) {
+    const input = e.target;
+    const id = input.dataset.id;
+    if (!id) return;
+    if (input.dataset.role === "name") updateName(id, input.value);
+    if (input.dataset.role === "price") updatePrice(id, input.value);
+  });
+
+  $editor.addEventListener("click", function (e) {
+    const btn = e.target.closest("[data-action='delete']");
+    if (!btn) return;
+    deleteItem(btn.dataset.id);
+  });
+
+  renderItems();
+  renderBasket();
+  renderEditor();
+})();
+</script>
+</body>
+</html>
